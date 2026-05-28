@@ -60,7 +60,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && secrets.KUBECONFIG != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,3 +69,5 @@ jobs:
           kubectl set image deployment/model-serving \
             api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --namespace=mlops
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
