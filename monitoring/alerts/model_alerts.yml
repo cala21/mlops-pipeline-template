@@ -1,0 +1,26 @@
+groups:
+  - name: mlops.model
+    rules:
+      - alert: ModelHighLatency
+        expr: histogram_quantile(0.95, model_prediction_latency_seconds_bucket) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model p95 latency above 500ms"
+
+      - alert: ModelHighErrorRate
+        expr: rate(model_predictions_total{status="error"}[5m]) / rate(model_predictions_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Model error rate above 5%"
+
+      - alert: ModelNotLoaded
+        expr: up{job="model-serving"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Model serving instance is down"

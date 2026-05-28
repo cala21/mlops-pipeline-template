@@ -1,0 +1,18 @@
+experiment:
+  name: "production-model"
+  artifact_location: "s3://mlops-artifacts/experiments"
+  tags:
+    team: "mlops"
+    environment: "production"
+
+tracking:
+  uri: "${MLFLOW_TRACKING_URI}"
+  registry_uri: "${MLFLOW_REGISTRY_URI}"
+
+model_registry:
+  staging_threshold:
+    accuracy: 0.85
+    f1_score: 0.80
+  production_threshold:
+    accuracy: 0.90
+    f1_score: 0.85
