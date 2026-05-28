@@ -7,7 +7,6 @@ on:
     branches: [main]
 
 env:
-  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -25,8 +24,10 @@ jobs:
 
   train:
     needs: test
-    if: github.ref == 'refs/heads/main'
+    # Requires MLFLOW_TRACKING_URI secret — skipped in forks / PRs without secrets
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    continue-on-error: true  # Don't block on missing MLFLOW_TRACKING_URI
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,7 +40,8 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
 
   build-and-push:
-    needs: train
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -58,16 +60,7 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-  deploy:
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main' && secrets.KUBECONFIG != ''
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v3
-      - run: |
-          kubectl set image deployment/model-serving \
-            api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --namespace=mlops
-        env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+  # deploy:
+  #   Configure this job after setting up your Kubernetes cluster.
+  #   Required secret: KUBECONFIG (base64-encoded kubeconfig file)
+  #   See docs/deploy.md for setup instructions.
