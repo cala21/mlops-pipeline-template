@@ -17,3 +17,6 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 .DS_Store
+
+# Runtime audit trail (EU AI Act Art. 12) — do not commit
+audit.log
